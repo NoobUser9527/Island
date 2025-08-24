@@ -7,3 +7,9 @@ cd build
 cmake ..
 make
 ```
+
+for linux
+
+```bash
+sudo dnf install libXrandr-devel
+```

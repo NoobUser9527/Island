@@ -1,9 +1,12 @@
-#include "Game.hpp"
+#include <spdlog/spdlog.h>
 
-int main(int argc, char* argv[]) {
-    Game game;
-    if (!game.init()) return 1;
-    game.run();
-    game.shutdown();
+#include "engine/core/GameApp.hpp"
+
+
+int main()
+{
+    spdlog::set_level(spdlog::level::trace);
+    engine::core::GameApp app;
+    app.run();
     return 0;
 }
