@@ -10,19 +10,21 @@ struct SDL_Texture;
 struct MIX_Audio;
 struct TTF_Font;
 
-namespace engine::resource {
+namespace engine::resource
+{
 
 class TextureManager;
 class AudioManager;
 class FontManager;
 
-class ResourceManager final{
-  private:
+class ResourceManager final
+{
+private:
     std::unique_ptr<TextureManager> texture_manager_;
     std::unique_ptr<AudioManager> audio_manager_;
     std::unique_ptr<FontManager> font_manager_;
 
-  public:
+public:
     explicit ResourceManager(SDL_Renderer *renderer);
     ~ResourceManager();
 

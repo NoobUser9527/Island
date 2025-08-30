@@ -3,41 +3,67 @@
 #include "SDL3/SDL_timer.h"
 #include "spdlog/spdlog.h"
 
-namespace engine::core {
+namespace engine::core
+{
 
-Time::Time() {
-    last_time_ = SDL_GetTicksNS();
-    frame_start_time_ = last_time_;
-    spdlog::trace("Time 初始化。last_time: {}", last_time_);
+Time::Time()
+{
+    last_tick_ns_ = SDL_GetTicksNS();
+    spdlog::trace("Time 初始化 last_tick_ns_: {}", last_tick_ns_);
 }
 
-void Time::update() {
-    frame_start_time_ = SDL_GetTicksNS();
-    auto current_delta_time = static_cast<double>(frame_start_time_ - last_time_) / 1000000000.0;
-    if (target_frame_time_ > 0.0) {
-        limitFrameRate(current_delta_time);
-    } else {
-        delta_time_ = current_delta_time;
+void Time::update()
+{
+    Uint64 current_tick = SDL_GetTicksNS();
+    Uint64 current_delta_tick = current_tick - last_tick_ns_;
+    if (target_frame_ns_ > 0 && current_delta_tick < target_frame_ns_)
+    {
+        SDL_DelayNS(target_frame_ns_ - current_delta_tick);
+        current_tick = SDL_GetTicksNS();
+        delta_time_ns_ = current_tick - last_tick_ns_;
+    }
+    else
+    {
+        delta_time_ns_ = current_delta_tick;
     }
 
-    last_time_ = SDL_GetTicksNS();
+    last_tick_ns_ = current_tick;
 }
 
-void Time::limitFrameRate(float current_delta_time) {
-    if (current_delta_time < target_frame_time_) {
-        double time_to_wait = target_frame_time_ - current_delta_time;
-        Uint64 ns_to_wait = static_cast<double>(time_to_wait * 1 * 1000 * 1000 * 1000.0);
-        SDL_DelayNS(ns_to_wait);
-        delta_time_ = static_cast<double>(SDL_GetTicksNS() - last_time_) / 1 * 1000 * 1000 * 1000.0;
+float Time::getDeltaTime() const
+{
+    return (static_cast<float>(delta_time_ns_) / 1'000'000'000.0f) * time_scale_;
+}
+void Time::setTimeScale(float scale)
+{
+    time_scale_ = scale;
+}
+float Time::getTimeScale() const
+{
+    return time_scale_;
+}
+void Time::setTargetFps(int target_fps)
+{
+    if (target_fps < 0)
+    {
+        spdlog::warn("目标 FPS 值不能被设置为负");
+        return;
     }
+
+    target_fps_ = target_fps;
+
+    if (target_fps == 0)
+    {
+        target_frame_ns_ = 0;
+        return;
+    }
+
+    target_frame_ns_ = 1000'000'000 / target_fps_;
 }
 
-float Time::getDeltaTime() const { return static_cast<float>(delta_time_ * time_scale_); }
-
-float Time::getUnscaledDeltaTime() const { return delta_time_; }
-void Time::setTimeScale(float scale) { time_scale_ = static_cast<double>(scale); }
-
-float Time::getTimeScale() const { return static_cast<float>(time_scale_); }
-void Time::setTargetFps(int target_fps) { target_fps_ = target_fps; }
+int Time::getTargetFps() const
+{
+    return target_fps_;
+}
 
 } // namespace engine::core

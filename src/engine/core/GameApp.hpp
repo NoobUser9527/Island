@@ -5,16 +5,19 @@
 struct SDL_Window;
 struct SDL_Renderer;
 
-namespace engine::resource {
+namespace engine::resource
+{
 class ResourceManager;
 }
 
-namespace engine::core {
+namespace engine::core
+{
 
 class Time;
 
-class GameApp final {
-  private:
+class GameApp final
+{
+private:
     //
     SDL_Window *window_ = nullptr;
     SDL_Renderer *sdl_renderer_ = nullptr;
@@ -24,7 +27,7 @@ class GameApp final {
     std::unique_ptr<engine::core::Time> time_;
     std::unique_ptr<engine::resource::ResourceManager> resource_manager_;
 
-  public:
+public:
     GameApp();
     ~GameApp();
 
@@ -35,7 +38,7 @@ class GameApp final {
     GameApp(GameApp &&) = delete;
     GameApp &operator=(GameApp &&) = delete;
 
-  private:
+private:
     [[nodiscard]] bool init();
     void handleEvent();
     void update(float delta_time);

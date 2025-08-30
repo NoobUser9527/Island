@@ -2,7 +2,6 @@
 
 #include "engine/core/GameApp.hpp"
 
-
 int main()
 {
     spdlog::set_level(spdlog::level::trace);

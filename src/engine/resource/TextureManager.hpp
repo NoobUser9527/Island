@@ -3,18 +3,23 @@
 #include <memory>
 #include <unordered_map>
 
-#include <SDL3/SDL_render.h>
 #include "glm/fwd.hpp"
+#include <SDL3/SDL_render.h>
 
-namespace engine::resource {
+namespace engine::resource
+{
 
-class TextureManager final {
+class TextureManager final
+{
     friend class ResourceManager;
 
-  private:
-    struct SDLTextureDeleter {
-        void operator()(SDL_Texture *texture) const {
-            if (texture) {
+private:
+    struct SDLTextureDeleter
+    {
+        void operator()(SDL_Texture *texture) const
+        {
+            if (texture)
+            {
                 SDL_DestroyTexture(texture);
             }
         }
@@ -22,7 +27,7 @@ class TextureManager final {
     SDL_Renderer *renderer_ = nullptr;
     std::unordered_map<std::string, std::unique_ptr<SDL_Texture, SDLTextureDeleter>> texture_map_;
 
-  public:
+public:
     explicit TextureManager(SDL_Renderer *renderer);
 
     TextureManager(const TextureManager &) = delete;
@@ -30,7 +35,7 @@ class TextureManager final {
     TextureManager(TextureManager &&) = delete;
     TextureManager &operator=(TextureManager &&) = delete;
 
-  private:
+private:
     SDL_Texture *load(const std::string &file_path);
     SDL_Texture *get(const std::string &file_path);
     glm::vec2 getSize(const std::string &file_path);
