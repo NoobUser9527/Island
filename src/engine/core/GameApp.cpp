@@ -205,7 +205,7 @@ bool GameApp::initCamera()
 {
     try
     {
-        camera_ = std::make_unique<engine::render::Camera>(glm::vec2{1280.0f, 720.0f});
+        camera_ = std::make_unique<engine::render::Camera>(glm::vec2{640.0f, 360.0f});
     }
     catch (const std::exception& e)
     {
