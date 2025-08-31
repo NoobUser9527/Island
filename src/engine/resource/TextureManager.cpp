@@ -8,86 +8,88 @@
 
 namespace engine::resource
 {
-TextureManager::TextureManager(SDL_Renderer *renderer) : renderer_(renderer)
+TextureManager::TextureManager(SDL_Renderer* renderer)
+    : renderer_(renderer)
 {
     if (renderer_ == nullptr)
     {
-        throw std::runtime_error("TextureManager 构造失败: renderer 为空");
+        throw std::runtime_error("TextureManager construction failed: renderer is null");
     }
 
-    spdlog::trace("TextureManager 构造完成");
+    spdlog::trace("TextureManager constructed successfully");
 }
 
-SDL_Texture *TextureManager::load(const std::string &file_path)
+SDL_Texture* TextureManager::load(std::string_view file_path)
 {
-    if (texture_map_.find(file_path) != texture_map_.end())
+    auto it = texture_map_.find(std::string(file_path));
+    if (it != texture_map_.end())
     {
-        spdlog::warn("TextureManager: 纹理已加载: {}", file_path);
-        return texture_map_[file_path].get();
+        spdlog::warn("TextureManager: texture already loaded: {}", file_path);
+        return it->second.get();
     }
 
-    SDL_Texture *texture = IMG_LoadTexture(renderer_, file_path.c_str());
+    SDL_Texture* texture = IMG_LoadTexture(renderer_, file_path.data());
     if (texture == nullptr)
     {
-        spdlog::error("TextureManager: 无法加载纹理: {}. SDL错误: {}", file_path, SDL_GetError());
+        spdlog::error("TextureManager: failed to load texture: {}. SDL error: {}", file_path, SDL_GetError());
         return nullptr;
     }
 
     texture_map_.emplace(file_path, std::unique_ptr<SDL_Texture, SDLTextureDeleter>(texture));
-    spdlog::info("TextureManager: 纹理加载成功: {}", file_path);
+    spdlog::info("TextureManager: texture loaded successfully: {}", file_path);
     return texture;
 }
 
-SDL_Texture *TextureManager::get(const std::string &file_path)
+SDL_Texture* TextureManager::get(std::string_view file_path)
 {
-    auto it = texture_map_.find(file_path);
+    auto it = texture_map_.find(std::string(file_path));
     if (it != texture_map_.end())
     {
         return it->second.get();
     }
     else
     {
-        spdlog::warn("TextureManager: 纹理未找到: {} 尝试加载", file_path);
+        spdlog::warn("TextureManager: texture not found: {}. Attempting to load...", file_path);
         return load(file_path);
     }
 }
 
-glm::vec2 TextureManager::getSize(const std::string &file_path)
+glm::vec2 TextureManager::getSize(std::string_view file_path)
 {
-    SDL_Texture *texture = get(file_path);
+    SDL_Texture* texture = get(file_path);
     if (texture == nullptr)
     {
-        spdlog::error("TextureManager: 无法获取纹理大小, 纹理未加载: {}", file_path);
+        spdlog::error("TextureManager: cannot get size, texture not loaded: {}", file_path);
         return glm::vec2(0.0f, 0.0f);
     }
 
     glm::vec2 size;
     if (!SDL_GetTextureSize(texture, &size.x, &size.y))
     {
-        spdlog::error("TextureManager: 无法查询纹理大小: {}. SDL错误: {}", file_path, SDL_GetError());
+        spdlog::error("TextureManager: failed to query texture size: {}. SDL error: {}", file_path, SDL_GetError());
         return glm::vec2(0.0f, 0.0f);
     }
     return size;
 }
 
-void TextureManager::unload(const std::string &file_path)
+void TextureManager::unload(std::string_view file_path)
 {
-    auto it = texture_map_.find(file_path);
+    auto it = texture_map_.find(std::string(file_path));
     if (it != texture_map_.end())
     {
         texture_map_.erase(it);
-        spdlog::info("TextureManager: 纹理卸载成功: {}", file_path);
+        spdlog::info("TextureManager: texture unloaded successfully: {}", file_path);
     }
     else
     {
-        spdlog::warn("TextureManager: 纹理未找到, 无法卸载: {}", file_path);
+        spdlog::warn("TextureManager: texture not found, cannot unload: {}", file_path);
     }
 }
 
 void TextureManager::clear()
 {
     texture_map_.clear();
-    spdlog::info("TextureManager: 所有纹理已卸载");
+    spdlog::info("TextureManager: all textures have been unloaded");
 }
 
 } // namespace engine::resource

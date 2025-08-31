@@ -6,7 +6,13 @@
 #include <glm/vec2.hpp>
 #include <spdlog/spdlog.h>
 
-#include "Time.hpp"
+#include "SDL3/SDL_keyboard.h"
+#include "SDL3/SDL_render.h"
+#include "SDL3/SDL_scancode.h"
+#include "engine/core/Time.hpp"
+#include "engine/render/Camera.hpp"
+#include "engine/render/Renderer.hpp"
+#include "engine/render/Sprite.hpp"
 #include "engine/resource/ResourceManager.hpp"
 
 namespace engine::core
@@ -21,7 +27,7 @@ GameApp::~GameApp()
 {
     if (is_running_)
     {
-        spdlog::warn("GameApp 被销毁时没有显示关闭。现在关闭。 ...");
+        spdlog::warn("GameApp was not closed properly, closing now...");
         close();
     }
 }
@@ -29,10 +35,7 @@ GameApp::~GameApp()
 void GameApp::run()
 {
     if (!init())
-    {
-        spdlog::error("初始化失败，无法运行游戏");
         return;
-    }
 
     time_->setTargetFps(60);
 
@@ -44,7 +47,7 @@ void GameApp::run()
         update(delta_time);
         render();
 
-        spdlog::info("delta_time: {}", delta_time);
+        spdlog::trace("delta_time: {}", delta_time);
     }
 
     close();
@@ -52,18 +55,22 @@ void GameApp::run()
 
 bool GameApp::init()
 {
-    spdlog::trace("初始化 GameAPP ...");
+    spdlog::trace("Initializing GameApp...");
     if (!initSDL())
         return false;
     if (!initTime())
         return false;
     if (!initResourceManager())
         return false;
+    if (!initRenderer())
+        return false;
+    if (!initCamera())
+        return false;
 
     testResourceManager();
 
     is_running_ = true;
-    spdlog::trace("GameAPP 初始化完成");
+    spdlog::info("Initialized GameApp");
     return true;
 }
 
@@ -78,145 +85,221 @@ void GameApp::handleEvent()
         }
     }
 }
+
 void GameApp::update(float delta_time)
 {
-    //
+    // game logic update
+    testCamera();
 }
 
 void GameApp::render()
 {
-    //
+    renderer_->clearScreen();
+
+    testRenderer();
+
+    renderer_->present();
 }
 
 void GameApp::close()
 {
-    spdlog::trace("关闭 GameApp");
-    if (sdl_renderer_ != nullptr)
+    if (!is_running_)
     {
-        SDL_DestroyRenderer(sdl_renderer_);
-        sdl_renderer_ = nullptr;
+        spdlog::warn("GameApp::close() called but already closed");
+        return;
     }
-    if (window_ != nullptr)
-    {
-        SDL_DestroyWindow(window_);
-        window_ = nullptr;
-    }
+
+    spdlog::trace("Closing GameApp...");
+
+    SDL_DestroyRenderer(sdl_renderer_);
+    sdl_renderer_ = nullptr;
+
+    SDL_DestroyWindow(window_);
+    window_ = nullptr;
+
     SDL_Quit();
     is_running_ = false;
-    spdlog::trace("GameApp 已关闭");
+
+    spdlog::info("GameApp closed");
 }
 
 bool GameApp::initSDL()
 {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
+    spdlog::trace("Initializing SDL...");
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0)
     {
-        spdlog::error("SDL 初始化失败! SDL错误: {}", SDL_GetError());
+        spdlog::error("Failed to initialize SDL: {}", SDL_GetError());
         return false;
     }
 
+    spdlog::trace("Creating window...");
     window_ = SDL_CreateWindow("Island", 1280, 720, SDL_WINDOW_RESIZABLE);
     if (window_ == nullptr)
     {
-        spdlog::error("无法创建窗口! SDL错误: {}", SDL_GetError());
+        spdlog::error("Failed to create window: {}", SDL_GetError());
         return false;
     }
+    spdlog::info("Created window: Island (1280x720)");
 
+    spdlog::trace("Creating renderer...");
     sdl_renderer_ = SDL_CreateRenderer(window_, nullptr);
     if (sdl_renderer_ == nullptr)
     {
-        spdlog::error("无法创建渲染器! SDL错误: {}", SDL_GetError());
+        spdlog::error("Failed to create renderer: {}", SDL_GetError());
         return false;
     }
-    spdlog::trace("SDL 初始化成功");
+
+    SDL_SetRenderLogicalPresentation(sdl_renderer_, 640, 360, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    spdlog::info("Created renderer");
     return true;
 }
 
 bool GameApp::initTime()
 {
+    spdlog::trace("Initializing Time...");
     try
     {
         time_ = std::make_unique<Time>();
     }
-    catch (const std::exception &e)
+    catch (const std::exception& e)
     {
-        spdlog::error("时间管理初始化失败: {}", e.what());
+        spdlog::error("Failed to initialize Time: {}", e.what());
         return false;
     }
-    spdlog::trace("时间管理初始化成功");
+    spdlog::info("Initialized Time");
     return true;
 }
+
 bool GameApp::initResourceManager()
 {
+    spdlog::trace("Initializing ResourceManager...");
     try
     {
         resource_manager_ = std::make_unique<engine::resource::ResourceManager>(sdl_renderer_);
     }
-    catch (const std::exception &e)
+    catch (const std::exception& e)
     {
-        spdlog::error("资源管理初始化失败: {}", e.what());
+        spdlog::error("Failed to initialize ResourceManager: {}", e.what());
         return false;
     }
-    spdlog::trace("资源管理初始化成功");
+    spdlog::info("Initialized ResourceManager");
     return true;
 }
+
+bool GameApp::initRenderer()
+{
+    try
+    {
+        renderer_ = std::make_unique<engine::render::Renderer>(sdl_renderer_, resource_manager_.get());
+    }
+    catch (const std::exception& e)
+    {
+        spdlog::error("Failed to initialize Renderer: {}", e.what());
+        return false;
+    }
+    spdlog::info("Initialized Renderer");
+    return true;
+}
+
+bool GameApp::initCamera()
+{
+    try
+    {
+        camera_ = std::make_unique<engine::render::Camera>(glm::vec2{1280.0f, 720.0f});
+    }
+    catch (const std::exception& e)
+    {
+        spdlog::error("Failed to initialize Camera: {}", e.what());
+        return false;
+    }
+    spdlog::info("Initialized Camera");
+    return true;
+}
+
 void GameApp::testResourceManager()
 {
     if (!resource_manager_)
     {
-        spdlog::error("资源管理器未初始化，无法测试");
+        spdlog::error("ResourceManager not initialized");
         return;
     }
 
-    // 测试纹理加载
+    // Test texture loading
     const std::string texture_path = ASSET_DIR "/textures/tileset.png";
-    SDL_Texture *texture = resource_manager_->loadTexture(texture_path);
+    SDL_Texture* texture = resource_manager_->loadTexture(texture_path);
     if (texture)
     {
-        spdlog::info("成功加载纹理: {}", texture_path);
+        spdlog::info("Loaded texture: {}", texture_path);
         glm::vec2 size = resource_manager_->getTextureSize(texture_path);
-        spdlog::info("纹理大小: {}x{}", size.x, size.y);
+        spdlog::info("Texture {} size: {}x{}", texture_path, size.x, size.y);
     }
     else
     {
-        spdlog::error("加载纹理失败: {}", texture_path);
+        spdlog::error("Failed to load texture: {}", texture_path);
     }
 
-    // 测试音效加载
+    // Test sound loading
     const std::string sound_path = ASSET_DIR "/sounds/jump.wav";
-    MIX_Audio *sound = resource_manager_->loadSound(sound_path);
+    MIX_Audio* sound = resource_manager_->loadSound(sound_path);
     if (sound)
     {
-        spdlog::info("成功加载音效: {}", sound_path);
+        spdlog::info("Loaded sound: {}", sound_path);
     }
     else
     {
-        spdlog::error("加载音效失败: {}", sound_path);
+        spdlog::error("Failed to load sound: {}", sound_path);
     }
 
-    // 测试音乐加载
+    // Test music loading
     const std::string music_path = ASSET_DIR "/music/background.mp3";
-    MIX_Audio *music = resource_manager_->loadMusic(music_path);
+    MIX_Audio* music = resource_manager_->loadMusic(music_path);
     if (music)
     {
-        spdlog::info("成功加载音乐: {}", music_path);
+        spdlog::info("Loaded music: {}", music_path);
     }
     else
     {
-        spdlog::error("加载音乐失败: {}", music_path);
+        spdlog::error("Failed to load music: {}", music_path);
     }
 
-    // 测试字体加载
+    // Test font loading
     const std::string font_path = ASSET_DIR "/fonts/VonwaonBitmap-16px.ttf";
     int font_size = 24;
-    TTF_Font *font = resource_manager_->loadFont(font_path, font_size);
+    TTF_Font* font = resource_manager_->loadFont(font_path, font_size);
     if (font)
     {
-        spdlog::info("成功加载字体: {} 大小: {}", font_path, font_size);
+        spdlog::info("Loaded font: {} size: {}", font_path, font_size);
     }
     else
     {
-        spdlog::error("加载字体失败: {} 大小: {}", font_path, font_size);
+        spdlog::error("Failed to load font: {} size: {}", font_path, font_size);
     }
+}
+
+void GameApp::testRenderer()
+{
+    engine::render::Sprite sprite_world(ASSET_DIR "/textures/Actors/frog.png");
+    engine::render::Sprite sprite_ui(ASSET_DIR "/textures/UI/buttons/Start1.png");
+    engine::render::Sprite sprite_parallad(ASSET_DIR "/textures/Layers/back.png");
+
+    static float rotation = 0.0f;
+    rotation += 0.1f;
+
+    renderer_->drawParallax(*camera_, sprite_parallad, glm::vec2(100.0f, 100.0f), glm::vec2(0.5f, 0.5f), glm::bvec2(true, false));
+    renderer_->drawSprite(*camera_, sprite_world, glm::vec2(200.0f, 200.0f), glm::vec2(1.0f, 1.0f), rotation);
+    renderer_->drawUISprite(sprite_ui, glm::vec2(100.0f, 100.0f));
+}
+void GameApp::testCamera()
+{
+    auto key_state = SDL_GetKeyboardState(nullptr);
+    if (key_state[SDL_SCANCODE_UP])
+        camera_->move(glm::vec2(0.0f, -1.0f));
+    if (key_state[SDL_SCANCODE_DOWN])
+        camera_->move(glm::vec2(0.0f, 1.0f));
+    if (key_state[SDL_SCANCODE_LEFT])
+        camera_->move(glm::vec2(-1.0f, 0.0f));
+    if (key_state[SDL_SCANCODE_RIGHT])
+        camera_->move(glm::vec2(1.0f, 0.0f));
 }
 
 } // namespace engine::core

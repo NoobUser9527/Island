@@ -1,2 +1,8 @@
 BasedOnStyle: Microsoft
 AccessModifierOffset: -4
+ColumnLimit: 400
+BreakConstructorInitializers: BeforeComma
+AllowShortFunctionsOnASingleLine: Inline
+PointerAlignment: Left
+
+

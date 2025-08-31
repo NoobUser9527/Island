@@ -9,7 +9,6 @@ namespace engine::core
 Time::Time()
 {
     last_tick_ns_ = SDL_GetTicksNS();
-    spdlog::trace("Time 初始化 last_tick_ns_: {}", last_tick_ns_);
 }
 
 void Time::update()
@@ -46,7 +45,7 @@ void Time::setTargetFps(int target_fps)
 {
     if (target_fps < 0)
     {
-        spdlog::warn("目标 FPS 值不能被设置为负");
+        spdlog::warn("target_fps need \"> 0\" or \"== 0\"");
         return;
     }
 

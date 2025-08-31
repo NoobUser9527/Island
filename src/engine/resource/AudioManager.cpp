@@ -8,37 +8,29 @@ namespace engine::resource
 
 AudioManager::AudioManager()
 {
-
     if (!MIX_Init())
     {
-        throw std::runtime_error("AudioManager 构造失败: 无法初始化 SDL_mixer");
+        throw std::runtime_error("Failed to construct AudioManager: MIX_Init failed");
     }
-    spdlog::trace("SDL_mixer 初始化成功");
+    spdlog::trace("Initialized SDL_mixer");
 
     SDL_AudioSpec desiredSpec;
-    SDL_zero(desiredSpec); // 初始化所有字段为0
+    SDL_zero(desiredSpec); // initialize all fields to 0
 
     desiredSpec.format = SDL_AUDIO_F32;
     desiredSpec.freq = 44100;
     desiredSpec.channels = 2;
-    {
-        // for (int i = 0; i < 1; ++i) {
-        //     spdlog::info("设备[{}]: {}", i, SDL_GetAudioDeviceName(i, 0));
-        // }
-    }
 
-    // MIX_Mixer *mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &desiredSpec);
-    MIX_Mixer *mixer = MIX_CreateMixer(&desiredSpec);
+    MIX_Mixer* mixer = MIX_CreateMixer(&desiredSpec);
     if (mixer == nullptr)
     {
         MIX_Quit();
-        spdlog::error("SDL Error: {}", SDL_GetError());
-
-        throw std::runtime_error("AudioManager 构造失败: MIX_CreateMixerDevice 失败" + std::string(SDL_GetError()));
+        spdlog::error("Failed to create mixer: {}", SDL_GetError());
+        throw std::runtime_error(std::string("Failed to construct AudioManager: MIX_CreateMixer failed. SDL error: ") + SDL_GetError());
     }
     mixer_ = mixer;
 
-    spdlog::trace("AudioManager 构造完成");
+    spdlog::trace("AudioManager constructed");
 }
 
 AudioManager::~AudioManager()
@@ -52,61 +44,62 @@ AudioManager::~AudioManager()
         mixer_ = nullptr;
     }
     MIX_Quit();
-    spdlog::trace("AudioManager 销毁完成");
+    spdlog::trace("AudioManager destroyed");
 }
 
-MIX_Audio *AudioManager::load(const std::string &file_path)
+MIX_Audio* AudioManager::load(std::string_view file_path)
 {
-    if (audio_map_.find(file_path) != audio_map_.end())
+    auto it = audio_map_.find(std::string(file_path));
+    if (it != audio_map_.end())
     {
-        spdlog::warn("AudioManager: 音频已加载: {}", file_path);
-        return audio_map_[file_path].get();
+        spdlog::trace("Audio already loaded: {}", file_path);
+        return it->second.get();
     }
 
-    MIX_Audio *audio = MIX_LoadAudio(mixer_, file_path.c_str(), true);
+    MIX_Audio* audio = MIX_LoadAudio(mixer_, file_path.data(), true);
     if (audio == nullptr)
     {
-        spdlog::error("AudioManager: 无法加载音频: {}. SDL_mixer错误: {}", file_path, SDL_GetError());
+        spdlog::error("Failed to load audio: {}. SDL_mixer error: {}", file_path, SDL_GetError());
         return nullptr;
     }
 
     audio_map_.emplace(file_path, std::unique_ptr<MIX_Audio, SDLAudioDeleter>(audio));
-    spdlog::info("AudioManager: 音频加载成功: {}", file_path);
+    spdlog::info("Loaded audio: {}", file_path);
     return audio;
 }
 
-MIX_Audio *AudioManager::get(const std::string &file_path)
+MIX_Audio* AudioManager::get(std::string_view file_path)
 {
-    auto it = audio_map_.find(file_path);
+    auto it = audio_map_.find(file_path.data());
     if (it != audio_map_.end())
     {
         return it->second.get();
     }
     else
     {
-        spdlog::warn("AudioManager: 音频未找到: {} 尝试加载", file_path);
+        spdlog::warn("Audio not found: {}. Attempting to load...", file_path);
         return load(file_path);
     }
 }
 
-void AudioManager::unload(const std::string &file_path)
+void AudioManager::unload(std::string_view file_path)
 {
-    auto it = audio_map_.find(file_path);
+    auto it = audio_map_.find(std::string(file_path));
     if (it != audio_map_.end())
     {
         audio_map_.erase(it);
-        spdlog::info("AudioManager: 音频卸载成功: {}", file_path);
+        spdlog::info("Unloaded audio: {}", file_path);
     }
     else
     {
-        spdlog::warn("AudioManager: 音频未找到, 无法卸载: {}", file_path);
+        spdlog::warn("Audio not found, cannot unload: {}", file_path);
     }
 }
 
 void AudioManager::clear()
 {
     audio_map_.clear();
-    spdlog::info("AudioManager: 所有音频已卸载");
+    spdlog::info("All audio resources unloaded");
 }
 
 } // namespace engine::resource

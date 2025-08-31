@@ -57,6 +57,8 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     src/engine/core/*.hpp
     src/engine/resource/*.cpp
     src/engine/resource/*.hpp
+    src/engine/render/*.cpp
+    src/engine/render/*.hpp
 )
 
 
