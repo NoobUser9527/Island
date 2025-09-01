@@ -28,7 +28,7 @@ class InputManager final
 private:
     SDL_Renderer* sdl_renderer_;
     std::unordered_map<std::string, std::vector<std::string>> actions_to_keyname_map_;
-    std::unordered_map<std::variant<SDL_Scancode, SDL_MouseButtonFlags>, std::vector<std::string>> input_to_actions_map_;
+    std::unordered_map<std::variant<SDL_Scancode, Uint8>, std::vector<std::string>> input_to_actions_map_;
 
     std::unordered_map<std::string, ActionState> action_states_;
 

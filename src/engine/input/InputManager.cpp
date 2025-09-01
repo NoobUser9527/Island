@@ -59,8 +59,7 @@ void InputManager::processEvent(const SDL_Event& event)
         bool is_down = event.key.down;
         bool is_repeat = event.key.repeat;
 
-        
-        if (auto it = input_to_actions_map_.find(scancode);it != input_to_actions_map_.end())
+        if (auto it = input_to_actions_map_.find(scancode); it != input_to_actions_map_.end())
         {
             const std::vector<std::string>& associated_actions = it->second;
             for (const auto& action_name : associated_actions)
@@ -72,15 +71,14 @@ void InputManager::processEvent(const SDL_Event& event)
     }
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
     case SDL_EVENT_MOUSE_BUTTON_UP: {
-        Uint32 button = event.button.button;
+        Uint8 button = event.button.button;
         bool is_down = event.button.down;
-        
-        if (auto it = input_to_actions_map_.find(button);it != input_to_actions_map_.end())
+
+        if (auto it = input_to_actions_map_.find(button); it != input_to_actions_map_.end())
         {
             const std::vector<std::string>& associated_actions = it->second;
             for (const auto& action_name : associated_actions)
             {
-
                 updateActionState(action_name, is_down, false);
             }
         }
