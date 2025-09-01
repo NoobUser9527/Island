@@ -49,8 +49,7 @@ AudioManager::~AudioManager()
 
 MIX_Audio* AudioManager::load(std::string_view file_path)
 {
-    auto it = audio_map_.find(std::string(file_path));
-    if (it != audio_map_.end())
+    if (auto it = audio_map_.find(std::string(file_path)); it != audio_map_.end())
     {
         spdlog::trace("Audio already loaded: {}", file_path);
         return it->second.get();
@@ -70,8 +69,7 @@ MIX_Audio* AudioManager::load(std::string_view file_path)
 
 MIX_Audio* AudioManager::get(std::string_view file_path)
 {
-    auto it = audio_map_.find(file_path.data());
-    if (it != audio_map_.end())
+    if (auto it = audio_map_.find(file_path.data()); it != audio_map_.end())
     {
         return it->second.get();
     }
@@ -84,8 +82,8 @@ MIX_Audio* AudioManager::get(std::string_view file_path)
 
 void AudioManager::unload(std::string_view file_path)
 {
-    auto it = audio_map_.find(std::string(file_path));
-    if (it != audio_map_.end())
+
+    if (auto it = audio_map_.find(std::string(file_path)); it != audio_map_.end())
     {
         audio_map_.erase(it);
         spdlog::info("Unloaded audio: {}", file_path);

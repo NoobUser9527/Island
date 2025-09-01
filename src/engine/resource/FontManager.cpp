@@ -38,8 +38,7 @@ TTF_Font* FontManager::load(std::string_view file_path, int font_size)
 
     FontKey key = {std::string(file_path), font_size};
 
-    auto it = font_map_.find(key);
-    if (it != font_map_.end())
+    if (auto it = font_map_.find(key); it != font_map_.end())
     {
         spdlog::warn("FontManager::load: Font already loaded. Path: {}, Size: {}", file_path, font_size);
         return it->second.get();
@@ -67,8 +66,7 @@ TTF_Font* FontManager::get(std::string_view file_path, int font_size)
 
     FontKey key = {std::string(file_path), font_size};
 
-    auto it = font_map_.find(key);
-    if (it != font_map_.end())
+    if (auto it = font_map_.find(key); it != font_map_.end())
     {
         return it->second.get();
     }
@@ -89,8 +87,7 @@ void FontManager::unload(std::string_view file_path, int font_size)
 
     FontKey key = {std::string(file_path), font_size};
 
-    auto it = font_map_.find(key);
-    if (it != font_map_.end())
+    if (auto it = font_map_.find(key); it != font_map_.end())
     {
         font_map_.erase(it);
         spdlog::trace("FontManager::unload: Successfully unloaded font. Path: {}, Size: {}", file_path, font_size);

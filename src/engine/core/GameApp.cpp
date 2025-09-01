@@ -5,11 +5,15 @@
 #include <SDL3/SDL.h>
 #include <glm/vec2.hpp>
 #include <spdlog/spdlog.h>
+#include <vector>
 
 #include "SDL3/SDL_keyboard.h"
 #include "SDL3/SDL_render.h"
 #include "SDL3/SDL_scancode.h"
+
+#include "engine/core/Config.hpp"
 #include "engine/core/Time.hpp"
+#include "engine/input/InputManager.hpp"
 #include "engine/render/Camera.hpp"
 #include "engine/render/Renderer.hpp"
 #include "engine/render/Sprite.hpp"
@@ -37,25 +41,26 @@ void GameApp::run()
     if (!init())
         return;
 
-    time_->setTargetFps(60);
-
     while (is_running_)
     {
         time_->update();
         float delta_time = time_->getDeltaTime();
+        input_manager_->update();
+
         handleEvent();
         update(delta_time);
         render();
 
-        spdlog::trace("delta_time: {}", delta_time);
+        // spdlog::trace("delta_time: {}", delta_time);
     }
-
     close();
 }
 
 bool GameApp::init()
 {
     spdlog::trace("Initializing GameApp...");
+    if (!initConfig())
+        return false;
     if (!initSDL())
         return false;
     if (!initTime())
@@ -65,6 +70,8 @@ bool GameApp::init()
     if (!initRenderer())
         return false;
     if (!initCamera())
+        return false;
+    if (!initInputManager())
         return false;
 
     testResourceManager();
@@ -76,14 +83,14 @@ bool GameApp::init()
 
 void GameApp::handleEvent()
 {
-    SDL_Event event;
-    while (SDL_PollEvent(&event))
+    if (input_manager_->shouldQuit())
     {
-        if (event.type == SDL_EVENT_QUIT)
-        {
-            is_running_ = false;
-        }
+        spdlog::trace("GameApp recv quit request from InputManager.");
+        is_running_ = false;
+        return;
     }
+
+    testInputManager();
 }
 
 void GameApp::update(float delta_time)
@@ -123,6 +130,22 @@ void GameApp::close()
     spdlog::info("GameApp closed");
 }
 
+bool GameApp::initConfig()
+{
+    spdlog::trace("Initializing Config...");
+    try
+    {
+        config_ = std::make_unique<engine::core::Config>(ASSET_DIR "/config.json");
+    }
+    catch (const std::exception& e)
+    {
+        spdlog::error("Failed to initialize Config: {}", e.what());
+        return false;
+    }
+    spdlog::info("Initialized Config");
+    return true;
+}
+
 bool GameApp::initSDL()
 {
     spdlog::trace("Initializing SDL...");
@@ -133,7 +156,7 @@ bool GameApp::initSDL()
     }
 
     spdlog::trace("Creating window...");
-    window_ = SDL_CreateWindow("Island", 1280, 720, SDL_WINDOW_RESIZABLE);
+    window_ = SDL_CreateWindow(config_->window_title_.c_str(), config_->window_width_, config_->window_height_, SDL_WINDOW_RESIZABLE);
     if (window_ == nullptr)
     {
         spdlog::error("Failed to create window: {}", SDL_GetError());
@@ -149,7 +172,11 @@ bool GameApp::initSDL()
         return false;
     }
 
-    SDL_SetRenderLogicalPresentation(sdl_renderer_, 640, 360, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    int vsync_mode = config_->vsync_enabled_ ? SDL_RENDERER_VSYNC_ADAPTIVE : SDL_RENDERER_VSYNC_DISABLED;
+    SDL_SetRenderVSync(sdl_renderer_, vsync_mode);
+    spdlog::trace("VSyne set to: {}", config_->vsync_enabled_ ? "Enabled" : "Disabled");
+
+    SDL_SetRenderLogicalPresentation(sdl_renderer_, config_->window_width_ / 2, config_->window_height_ / 2, SDL_LOGICAL_PRESENTATION_LETTERBOX);
     spdlog::info("Created renderer");
     return true;
 }
@@ -166,6 +193,7 @@ bool GameApp::initTime()
         spdlog::error("Failed to initialize Time: {}", e.what());
         return false;
     }
+    time_->setTargetFps(config_->target_fps_);
     spdlog::info("Initialized Time");
     return true;
 }
@@ -205,7 +233,7 @@ bool GameApp::initCamera()
 {
     try
     {
-        camera_ = std::make_unique<engine::render::Camera>(glm::vec2{640.0f, 360.0f});
+        camera_ = std::make_unique<engine::render::Camera>(glm::vec2{config_->window_width_ / 2, config_->window_height_ / 2});
     }
     catch (const std::exception& e)
     {
@@ -213,6 +241,21 @@ bool GameApp::initCamera()
         return false;
     }
     spdlog::info("Initialized Camera");
+    return true;
+}
+
+bool GameApp::initInputManager()
+{
+    try
+    {
+        input_manager_ = std::make_unique<engine::input::InputManager>(sdl_renderer_, config_.get());
+    }
+    catch (const std::exception& e)
+    {
+        spdlog::error("Failed to initialize InputManager: {}", e.what());
+        return false;
+    }
+    spdlog::info("Initialized InputManager");
     return true;
 }
 
@@ -289,6 +332,7 @@ void GameApp::testRenderer()
     renderer_->drawSprite(*camera_, sprite_world, glm::vec2(200.0f, 200.0f), glm::vec2(1.0f, 1.0f), rotation);
     renderer_->drawUISprite(sprite_ui, glm::vec2(100.0f, 100.0f));
 }
+
 void GameApp::testCamera()
 {
     auto key_state = SDL_GetKeyboardState(nullptr);
@@ -300,6 +344,37 @@ void GameApp::testCamera()
         camera_->move(glm::vec2(-1.0f, 0.0f));
     if (key_state[SDL_SCANCODE_RIGHT])
         camera_->move(glm::vec2(1.0f, 0.0f));
+}
+
+void GameApp::testInputManager()
+{
+    std::vector<std::string> actions = {
+        "move_up",
+        "move_down",
+        "move_left",
+        "move_right",
+        "jump",
+        "attack",
+        "pause",
+        "MouseLeftClick",
+        "MouseRightClick",
+    };
+
+    for (const auto& action : actions)
+    {
+        if (input_manager_->isActionPressed(action))
+        {
+            spdlog::info("{} Pressed", action);
+        }
+        if (input_manager_->isActionReleased(action))
+        {
+            spdlog::info("{} Released", action);
+        }
+        if (input_manager_->isActionDown(action))
+        {
+            spdlog::info("{} Down", action);
+        }
+    }
 }
 
 } // namespace engine::core

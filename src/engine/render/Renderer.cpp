@@ -5,10 +5,10 @@
 
 #include <spdlog/spdlog.h>
 
-#include "SDL3/SDL_error.h"
-#include "SDL3/SDL_surface.h"
+#include <SDL3/SDL_error.h>
 #include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
+#include <SDL3/SDL_surface.h>
 
 #include "engine/render/Camera.hpp"
 #include "engine/render/Sprite.hpp"

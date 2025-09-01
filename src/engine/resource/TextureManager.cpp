@@ -21,8 +21,7 @@ TextureManager::TextureManager(SDL_Renderer* renderer)
 
 SDL_Texture* TextureManager::load(std::string_view file_path)
 {
-    auto it = texture_map_.find(std::string(file_path));
-    if (it != texture_map_.end())
+    if (auto it = texture_map_.find(std::string(file_path)); it != texture_map_.end())
     {
         spdlog::warn("TextureManager: texture already loaded: {}", file_path);
         return it->second.get();
@@ -42,8 +41,7 @@ SDL_Texture* TextureManager::load(std::string_view file_path)
 
 SDL_Texture* TextureManager::get(std::string_view file_path)
 {
-    auto it = texture_map_.find(std::string(file_path));
-    if (it != texture_map_.end())
+    if (auto it = texture_map_.find(std::string(file_path)); it != texture_map_.end())
     {
         return it->second.get();
     }
@@ -74,8 +72,7 @@ glm::vec2 TextureManager::getSize(std::string_view file_path)
 
 void TextureManager::unload(std::string_view file_path)
 {
-    auto it = texture_map_.find(std::string(file_path));
-    if (it != texture_map_.end())
+    if (auto it = texture_map_.find(std::string(file_path)); it != texture_map_.end())
     {
         texture_map_.erase(it);
         spdlog::info("TextureManager: texture unloaded successfully: {}", file_path);

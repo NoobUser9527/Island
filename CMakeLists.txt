@@ -53,12 +53,14 @@ add_subdirectory(external/spdlog EXCLUDE_FROM_ALL)
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
     src/main.cpp
-    src/engine/core/*.cpp
     src/engine/core/*.hpp
-    src/engine/resource/*.cpp
+    src/engine/core/*.cpp
     src/engine/resource/*.hpp
-    src/engine/render/*.cpp
+    src/engine/resource/*.cpp
     src/engine/render/*.hpp
+    src/engine/render/*.cpp
+    src/engine/input/*.hpp
+    src/engine/input/*.cpp
 )
 
 

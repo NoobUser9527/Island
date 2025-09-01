@@ -5,4 +5,8 @@ BreakConstructorInitializers: BeforeComma
 AllowShortFunctionsOnASingleLine: Inline
 PointerAlignment: Left
 
-
+BinPackArguments: false
+BinPackParameters: false
+Cpp11BracedListStyle: true
+AllowAllArgumentsOnNextLine: false
+AllowAllConstructorInitializersOnNextLine: false
