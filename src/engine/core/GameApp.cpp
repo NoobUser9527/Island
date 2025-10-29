@@ -1,15 +1,14 @@
 #include "GameApp.hpp"
 
 #include <memory>
-
-#include <SDL3/SDL.h>
-#include <glm/vec2.hpp>
-#include <spdlog/spdlog.h>
 #include <vector>
 
-#include "SDL3/SDL_keyboard.h"
-#include "SDL3/SDL_render.h"
-#include "SDL3/SDL_scancode.h"
+#include <spdlog/spdlog.h>
+#include <glm/vec2.hpp>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_keyboard.h>
+#include <SDL3/SDL_render.h>
+#include <SDL3/SDL_scancode.h>
 
 #include "engine/core/Config.hpp"
 #include "engine/core/Time.hpp"
@@ -135,7 +134,7 @@ bool GameApp::initConfig()
     spdlog::trace("Initializing Config...");
     try
     {
-        config_ = std::make_unique<engine::core::Config>(ASSET_DIR "/config.json");
+        config_ = std::make_unique<engine::core::Config>(SOURCE_DIR "assets/config.json");
     }
     catch (const std::exception& e)
     {
@@ -149,7 +148,7 @@ bool GameApp::initConfig()
 bool GameApp::initSDL()
 {
     spdlog::trace("Initializing SDL...");
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0)
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != true)
     {
         spdlog::error("Failed to initialize SDL: {}", SDL_GetError());
         return false;
@@ -268,7 +267,7 @@ void GameApp::testResourceManager()
     }
 
     // Test texture loading
-    const std::string texture_path = ASSET_DIR "/textures/tileset.png";
+    const std::string texture_path = SOURCE_DIR "assets/textures/Layers/tileset.png";
     SDL_Texture* texture = resource_manager_->loadTexture(texture_path);
     if (texture)
     {
@@ -282,7 +281,7 @@ void GameApp::testResourceManager()
     }
 
     // Test sound loading
-    const std::string sound_path = ASSET_DIR "/sounds/jump.wav";
+    const std::string sound_path = SOURCE_DIR "assets/audio/monster.mp3";
     MIX_Audio* sound = resource_manager_->loadSound(sound_path);
     if (sound)
     {
@@ -294,7 +293,7 @@ void GameApp::testResourceManager()
     }
 
     // Test music loading
-    const std::string music_path = ASSET_DIR "/music/background.mp3";
+    const std::string music_path = SOURCE_DIR "assets/audio/poka01.mp3";
     MIX_Audio* music = resource_manager_->loadMusic(music_path);
     if (music)
     {
@@ -306,7 +305,7 @@ void GameApp::testResourceManager()
     }
 
     // Test font loading
-    const std::string font_path = ASSET_DIR "/fonts/VonwaonBitmap-16px.ttf";
+    const std::string font_path = SOURCE_DIR "assets/fonts/VonwaonBitmap-16px.ttf";
     int font_size = 24;
     TTF_Font* font = resource_manager_->loadFont(font_path, font_size);
     if (font)
@@ -321,9 +320,9 @@ void GameApp::testResourceManager()
 
 void GameApp::testRenderer()
 {
-    engine::render::Sprite sprite_world(ASSET_DIR "/textures/Actors/frog.png");
-    engine::render::Sprite sprite_ui(ASSET_DIR "/textures/UI/buttons/Start1.png");
-    engine::render::Sprite sprite_parallad(ASSET_DIR "/textures/Layers/back.png");
+    engine::render::Sprite sprite_world(SOURCE_DIR "assets/textures/Actors/frog.png");
+    engine::render::Sprite sprite_ui(SOURCE_DIR "assets/textures/UI/buttons/Start1.png");
+    engine::render::Sprite sprite_parallad(SOURCE_DIR "assets/textures/Layers/back.png");
 
     static float rotation = 0.0f;
     rotation += 0.1f;

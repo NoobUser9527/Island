@@ -21,21 +21,23 @@ TextureManager::TextureManager(SDL_Renderer* renderer)
 
 SDL_Texture* TextureManager::load(std::string_view file_path)
 {
-    if (auto it = texture_map_.find(std::string(file_path)); it != texture_map_.end())
+    std::string path(file_path);
+
+    if (auto it = texture_map_.find(path); it != texture_map_.end())
     {
-        spdlog::warn("TextureManager: texture already loaded: {}", file_path);
+        spdlog::warn("TextureManager: texture already loaded: {}", path);
         return it->second.get();
     }
 
     SDL_Texture* texture = IMG_LoadTexture(renderer_, file_path.data());
     if (texture == nullptr)
     {
-        spdlog::error("TextureManager: failed to load texture: {}. SDL error: {}", file_path, SDL_GetError());
+        spdlog::error("TextureManager: failed to load texture: {}. SDL error: {}", path, SDL_GetError());
         return nullptr;
     }
 
-    texture_map_.emplace(file_path, std::unique_ptr<SDL_Texture, SDLTextureDeleter>(texture));
-    spdlog::info("TextureManager: texture loaded successfully: {}", file_path);
+    texture_map_.emplace(path, std::unique_ptr<SDL_Texture, SDLTextureDeleter>(texture));
+    spdlog::info("TextureManager: texture loaded successfully: {}", path);
     return texture;
 }
 

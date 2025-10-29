@@ -1,8 +1,8 @@
 #include "FontManager.hpp"
-#include "SDL3_ttf/SDL_ttf.h"
 #include <string>
 
 #include <spdlog/spdlog.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 namespace engine::resource
 {

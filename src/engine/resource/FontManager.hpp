@@ -1,12 +1,12 @@
 #pragma once
 
-#include <SDL3_ttf/SDL_ttf.h>
-
 #include <cstddef>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
+
+#include <SDL3_ttf/SDL_ttf.h>
 
 namespace engine::resource
 {

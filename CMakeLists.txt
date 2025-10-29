@@ -85,7 +85,7 @@ target_link_libraries(Island PRIVATE
 # 运行时资源路径
 # -------------------------
 target_compile_definitions(Island PRIVATE
-    ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets"
+    SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/"
 )
 
 # -------------------------

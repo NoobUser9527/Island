@@ -1,7 +1,7 @@
 #include "AudioManager.hpp"
 
-#include <SDL3_mixer/SDL_mixer.h>
 #include <spdlog/spdlog.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 namespace engine::resource
 {

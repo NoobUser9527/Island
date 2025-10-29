@@ -1,11 +1,11 @@
 #include "ResourceManager.hpp"
 
+#include <glm/vec2.hpp>
+#include <spdlog/spdlog.h>
+
 #include "AudioManager.hpp"
 #include "FontManager.hpp"
 #include "TextureManager.hpp"
-
-#include <glm/vec2.hpp>
-#include <spdlog/spdlog.h>
 
 namespace engine::resource
 {

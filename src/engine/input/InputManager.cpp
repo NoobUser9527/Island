@@ -2,9 +2,8 @@
 
 #include <stdexcept>
 
-#include <SDL3/SDL.h>
-#include <glm/vec2.hpp>
 #include <spdlog/spdlog.h>
+#include <SDL3/SDL.h>
 
 #include "engine/core/Config.hpp"
 
@@ -29,7 +28,6 @@ InputManager::InputManager(SDL_Renderer* sdl_renderer, const engine::core::Confi
 
 void InputManager::update()
 {
-
     for (auto& [action_name, state] : action_states_)
     {
         if (state == ActionState::PRESSED_THIS_FRAME)
@@ -73,6 +71,7 @@ void InputManager::processEvent(const SDL_Event& event)
     case SDL_EVENT_MOUSE_BUTTON_UP: {
         Uint8 button = event.button.button;
         bool is_down = event.button.down;
+        spdlog::debug("button: {}", button);
 
         if (auto it = input_to_actions_map_.find(button); it != input_to_actions_map_.end())
         {
@@ -182,12 +181,12 @@ void InputManager::initializeMappings(const engine::core::Config* config)
             if (scancode != SDL_SCANCODE_UNKNOWN)
             {
                 input_to_actions_map_[scancode].push_back(action_name);
-                spdlog::trace("  Mapping key: {} (Scancode: {}) to action: {}", key_name, static_cast<int>(scancode), action_name);
+                spdlog::trace("Mapping key: {} (Scancode: {}) to action: {}", key_name, static_cast<int>(scancode), action_name);
             }
             else if (mouse_button != 0)
             {
                 input_to_actions_map_[mouse_button].push_back(action_name);
-                spdlog::trace("  Mapping mouse button: {} (Button ID: {}) to action: {}", key_name, static_cast<int>(mouse_button), action_name);
+                spdlog::trace("Mapping mouse button: {} (Button ID: {}) to action: {}", key_name, static_cast<int>(mouse_button), action_name);
             }
             else
             {

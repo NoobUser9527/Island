@@ -1,7 +1,8 @@
 #pragma once
 
-#include "engine/input/InputManager.hpp"
 #include <memory>
+
+#include "engine/input/InputManager.hpp"
 
 struct SDL_Window;
 struct SDL_Renderer;

@@ -1,11 +1,13 @@
 #pragma once
-#include <SDL3/SDL_render.h>
-#include <glm/vec2.hpp>
+
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <variant>
 #include <vector>
+
+#include <SDL3/SDL_render.h>
+#include <glm/vec2.hpp>
 
 namespace engine::core
 {
@@ -28,7 +30,7 @@ class InputManager final
 private:
     SDL_Renderer* sdl_renderer_;
     std::unordered_map<std::string, std::vector<std::string>> actions_to_keyname_map_;
-    std::unordered_map<std::variant<SDL_Scancode, Uint8>, std::vector<std::string>> input_to_actions_map_;
+    std::unordered_map<std::variant<SDL_Scancode, SDL_MouseID>, std::vector<std::string>> input_to_actions_map_;
 
     std::unordered_map<std::string, ActionState> action_states_;
 

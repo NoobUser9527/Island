@@ -2,9 +2,12 @@
 
 #include <memory>
 #include <unordered_map>
+#include <string>
 
-#include "glm/fwd.hpp"
+#include <glm/fwd.hpp>
 #include <SDL3/SDL_render.h>
+
+#include "engine/utils/Utils.hpp"
 
 namespace engine::resource
 {
@@ -14,6 +17,7 @@ class TextureManager final
     friend class ResourceManager;
 
 private:
+
     struct SDLTextureDeleter
     {
         void operator()(SDL_Texture* texture) const
@@ -25,7 +29,7 @@ private:
         }
     };
     SDL_Renderer* renderer_ = nullptr;
-    std::unordered_map<std::string, std::unique_ptr<SDL_Texture, SDLTextureDeleter>> texture_map_;
+    std::unordered_map<std::string, std::unique_ptr<SDL_Texture, SDLTextureDeleter>, StdStringHash> texture_map_;
 
 public:
     explicit TextureManager(SDL_Renderer* renderer);

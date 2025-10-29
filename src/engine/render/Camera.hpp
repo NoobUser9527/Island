@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/utils/math.hpp"
+#include "engine/utils/Math.hpp"
 #include <optional>
 
 namespace engine::render

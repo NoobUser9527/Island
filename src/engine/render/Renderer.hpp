@@ -4,7 +4,7 @@
 
 #include <SDL3/SDL_stdinc.h>
 
-#include "engine/utils/math.hpp"
+#include "engine/utils/Math.hpp"
 
 struct SDL_Renderer;
 struct SDL_FRect;
