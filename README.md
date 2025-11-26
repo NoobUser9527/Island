@@ -16,5 +16,8 @@ sudo dnf install libXrandr-devel
 ```
 ubuntu
 ```bash
-sudo apt install libxss-dev
+sudo apt install \
+    libx11-dev libxext-dev libxrandr-dev libxrender-dev libxfixes-dev \
+    libxss-dev libxi-dev libxcursor-dev libxkbcommon-dev libxtst-dev
+
 ```
