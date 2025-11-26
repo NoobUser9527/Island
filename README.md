@@ -10,6 +10,11 @@ make
 
 for linux
 
+fedora
 ```bash
 sudo dnf install libXrandr-devel
+```
+ubuntu
+```bash
+sudo apt install libxss-dev
 ```
